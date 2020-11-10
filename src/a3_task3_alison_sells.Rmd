@@ -1,0 +1,96 @@
+---
+title: "a3_task3_alison_sells"
+author: "Alison Sells"
+date: "11/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(here)
+library(kableExtra)
+```
+## Summary
+In this document I will be  analyzing the Sea Urchins dataset. With this data I will be utilizing github, data wrangling to explore the dataset, and overall work on my data visualization skills. In this task I will create various graphs and summary tables to look at the various tendencies of the urchins.
+
+
+##  Size Comparisons
+We will be using various graph types to see the complexities of the urchins data focusing on the distribution of sizes based on the urchin type
+###  Histogram
+```{r, echo = TRUE, message = FALSE, warning = FALSE}
+urchins<- read_csv(here("data","urchins.csv"))
+clean_urchins <- urchins %>% clean_names() 
+
+ggplot(data=clean_urchins,aes(x= size))+
+  geom_histogram()+
+  facet_wrap(~common_name)+
+  labs(x= "Size(cm)", y= "Count")
+  
+```
+### Boxplot
+```{r, echo = TRUE, message = FALSE, warning = FALSE}
+ggplot(data = clean_urchins, aes(x= common_name, y= size))+
+  geom_boxplot()+
+  labs(x= "Common Name", y= "Size(cm)")
+```
+
+
+### Descriptive Statistics Table
+
+Here we use kable_styling to better visualize the data in the final document
+
+
+```{r, echo = TRUE, message = FALSE, warning = FALSE}
+urchin_table<- clean_urchins %>% 
+  group_by(common_name) %>% 
+  summarize(mean= mean(size), median(median(size), sd= sd(size), n= n()))
+kbl(urchin_table) %>% 
+  kable_styling()
+```
+
+###  Overall Takeways
+Looking at the various graphs above, it is fairly clear to see that the sample of the red Urchin population seems to be more normally distributed than the sample of the purple urchin population. The purple urchin sample has much less spread  and is concentrated on the lower end as compared to the red urchins. When comparing the means of the two samples, the purple urchin (4.47 cm) is much lower than that of the red urchins (6.78 cm) and although these graphs do not make the mean very clear, they give a general idea of where thew values would be for both populations. 
+
+## Exploring Purple Urchins 
+We will show focus on the purple urchin population size by different sites and year.
+```{r,echo = TRUE, message = FALSE, warning = FALSE}
+purple_urchins <- clean_urchins %>% 
+  filter(common_name== "Purple Urchin") %>% 
+  mutate(Date= mdy(date)) %>% 
+  mutate(year= year(Date)) %>% 
+  mutate(site_full= case_when(
+    site== "NAPL" ~ "Naples Reef",
+    site== "AQUE" ~ "Arroyo Quemado",
+    site== "CARP" ~ "Carpinteria Reef",
+    site== "MOHK" ~ "Mohawk Reef",
+    site== "IVEE" ~ "Isla Vista Reef"
+  ))
+```
+###  Summary table
+Summary table of the purple urchins by the amount collected, where they were collected, and in what year
+```{r,echo = TRUE, message = FALSE, warning = FALSE}
+purchin_table <- purple_urchins %>% 
+  group_by(site_full, year) %>% 
+  count(site_full, year) 
+purchin_table
+  
+```
+### Exploratory Graph
+ This graph is to explore the purple urchins by the same catgories as the summary table above
+ 
+ 
+```{r,echo = TRUE, message = FALSE, warning = FALSE}
+ggplot(data= purple_urchins, aes(x= year, color= site_full))+
+  geom_histogram(bins= 30) +
+  facet_wrap(~site_full)
+
+purchin_table
+```
+ 
+
+
+
+
