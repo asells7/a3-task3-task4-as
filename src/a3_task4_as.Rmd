@@ -1,0 +1,95 @@
+---
+title: "a3_task4_Alison_Sells"
+author: "Alison Sells"
+date: "11/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(here)
+library(kableExtra)
+```
+
+## Summary
+This document will explore the mean size of purple urchins under different treatments of the Naples Reef in 2010. this will involve creating some graphs to visualize the data along with performing T- tests to determine the potential significance of these different treatments.
+
+
+### Data wrangling
+
+
+```{r}
+purple<- read_csv(here("data","urchins.csv"))
+purple_urchins <-purple %>% clean_names() 
+
+```
+```{r}
+ new_dates <- purple_urchins %>% 
+mutate(date_new=mdy(date)) %>% 
+  mutate(year= year(date_new)) %>% 
+  mutate(month= month(date_new)) %>% 
+ filter(site== "NAPL", common_name== "Purple Urchin", year== "2010", month== 1)
+
+```
+
+
+### Histogram
+
+```{r}
+ggplot(data= new_dates, aes(x= size, color= treatment))+
+  geom_histogram(bins= 30) +
+  facet_wrap(~treatment)
+```
+### QQ Plot
+
+```{r}
+ggplot(data= new_dates, aes(sample= size))+
+  geom_qq()+
+  facet_wrap(~treatment)
+```
+
+
+### Initial Takeaways from the data viz
+From the histogram  and QQ plots above, one can see that the urchins in both treatments have a lower mean than in a normal distribution and they both have upper tails.  However, the control treatment group urchins look slightly more normally distributed.
+
+
+### Descriptive Statistics Table
+
+Here we use kable_styling to better visualize the data in the final document
+```{r}
+purchin_table<- purple_urchins %>% 
+  group_by(treatment) %>% 
+  summarize(mean= mean(size), median(median(size), sd= sd(size), n= n()))
+kbl(purchin_table) %>% 
+  kable_styling()
+```
+
+### Two Sample T test
+Here I do a Two Sample T test to compare the means between the two different treatment groups. 
+First I split the two treatments into different vectors
+
+```{r}
+ 
+
+year_sample <-new_dates %>% 
+  filter(treatment== "ANNUAL") %>% 
+  pull(size)
+
+control_sample <- new_dates %>% 
+  filter(treatment== "CONTROL") %>% 
+  pull (size)
+
+
+```
+
+
+```{r}
+t.test(x= year_sample, y= control_sample)
+```
+
+### takeaways
+
+After doing the two sample t test, one can see that the means of the two different treatment groups are very similar with only a difference of around 0.2 cm. However, the p value of .25 is interesting considering how close the means are.Overall the p value means that there is 25% chance that this sample came from the population with the same means . 
